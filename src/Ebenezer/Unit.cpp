@@ -40,6 +40,7 @@ void Unit::Initialize()
 
 	m_bCanStealth = true;
 	m_bReflectArmorType = 0;
+	m_bIsBlinking = false;
 	m_bIsBlinded = false;
 	m_bCanUseSkills = m_bCanUsePotions = m_bCanTeleport = true;
 	m_bInstantCast = false;
@@ -67,6 +68,8 @@ void Unit::Initialize()
 	m_bManaAbsorb = 0;
 	m_bRadiusAmount = 0;
 	m_buffCount = 0;
+
+	m_tBlinkExpiryTime = 0;
 
 	InitType3();
 	InitType4(true);

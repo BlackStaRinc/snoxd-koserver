@@ -2,6 +2,8 @@
 #include "MagicProcess.h"
 #include "MagicInstance.h"
 #include "Map.h"
+#include "User.h"
+#include "Unit.h"
 
 #if defined(EBENEZER)
 #	include "EbenezerDlg.h"
@@ -247,10 +249,10 @@ bool CMagicProcess::GrantType4Buff(_MAGIC_TABLE * pSkill, _MAGIC_TYPE4 *pType, U
 		else
 			pTarget->m_sMaxHPAmount = pType->sMaxHP;
 
-		if (pType->sMaxMP == 0 && pType->sMaxMPPct > 0)
+	/*	if (pType->sMaxMP == 0 && pType->sMaxMPPct > 0)
 			pTarget->m_sMaxMPAmount = (pType->sMaxMPPct - 100) * (pTarget->GetMaxMana() - pTarget->m_sMaxMPAmount) / 100;
 		else
-			pTarget->m_sMaxMPAmount = pType->sMaxMP;
+			pTarget->m_sMaxMPAmount = pType->sMaxMP;*/
 		break;
 
 	case BUFF_TYPE_AC:
@@ -380,8 +382,8 @@ bool CMagicProcess::GrantType4Buff(_MAGIC_TABLE * pSkill, _MAGIC_TYPE4 *pType, U
 		break;
 
 	case BUFF_TYPE_FREEZE:
-		// Proportional to the target user's current HP.
-		pTarget->m_bSpeedAmount = pType->bSpeed;
+		if (pTarget->isPlayer())
+			pTarget->m_bIsBlinking = true;
 		break;
 
 	case BUFF_TYPE_INSTANT_MAGIC:
@@ -445,6 +447,8 @@ bool CMagicProcess::GrantType4Buff(_MAGIC_TABLE * pSkill, _MAGIC_TYPE4 *pType, U
 		break;
 
 	case BUFF_TYPE_SPEED2:				// Cold Wave
+		if ( myrand ( 1 , 100 ) > 50 )
+			return;
 		pTarget->m_bSpeedAmount = (pTarget->m_bSpeedAmount / 100 * 65);
 		break;
 
@@ -467,6 +471,12 @@ bool CMagicProcess::GrantType4Buff(_MAGIC_TABLE * pSkill, _MAGIC_TYPE4 *pType, U
 		// Also: the amount is 20 in the database. Could be that it's divided by 2 (i.e. splitting it between dagger/bow), the skill description's inaccurate
 		// or the description roughly reflects the final damage after player damage reduction. For now, we'll just assume it's the latter.
 		pTarget->m_byDaggerRAmount = pTarget->m_byBowRAmount = 100 - (uint8) pType->sSpecialAmount;
+		break;
+
+	case BUFF_TYPE_STUNNING:				// Stunned
+		if ( myrand (1 , 100) > 50 )
+			return;
+		pTarget->m_bSpeedAmount = pTarget->m_bSpeedAmount;
 		break;
 
 	case BUFF_TYPE_LOYALTY_AMOUNT:		// Santa's Present (gives an extra +2NP per kill, unlike BUFF_TYPE_LOYALTY which uses an percent).
@@ -584,7 +594,7 @@ bool CMagicProcess::RemoveType4Buff(uint8 byBuffType, Unit *pTarget, bool bRemov
 	{
 	case BUFF_TYPE_HP_MP:
 		pTarget->m_sMaxHPAmount = 0;
-		pTarget->m_sMaxMPAmount = 0;
+	//	pTarget->m_sMaxMPAmount = 0;
 		break;
 
 	case BUFF_TYPE_AC:
@@ -694,8 +704,11 @@ bool CMagicProcess::RemoveType4Buff(uint8 byBuffType, Unit *pTarget, bool bRemov
 		break;
 
 	case BUFF_TYPE_FREEZE:
-		// Proportional to the target user's current HP.
-		pTarget->m_bSpeedAmount = 100;
+		if (pTarget->isPlayer())
+		{
+			pTarget->m_bIsBlinking = false;
+			TO_USER(pTarget)->SendUserStatusUpdate(USER_STATUS_POISON, USER_STATUS_CURE);
+		}
 		break;
 
 	case BUFF_TYPE_INSTANT_MAGIC:
@@ -778,6 +791,10 @@ bool CMagicProcess::RemoveType4Buff(uint8 byBuffType, Unit *pTarget, bool bRemov
 		pTarget->m_byDaggerRAmount = pTarget->m_byBowRAmount = 100; // note: overwrite the percentage for now (nothing else uses it)
 		break;
 
+	case BUFF_TYPE_STUNNING:				// Stunned
+		pTarget->m_bSpeedAmount = 100;
+		break;
+
 	case BUFF_TYPE_LOYALTY_AMOUNT:		// Santa's Present (gives an extra +2NP per kill, unlike BUFF_TYPE_LOYALTY which uses an percent).
 		if (pTarget->isPlayer())
 			TO_USER(pTarget)->m_bSkillNPBonus -= 2;
@@ -857,6 +874,8 @@ bool CMagicProcess::RemoveType4Buff(uint8 byBuffType, Unit *pTarget, bool bRemov
 		{
 			if (byBuffType == BUFF_TYPE_SPEED || byBuffType == BUFF_TYPE_SPEED2)
 				TO_USER(pTarget)->SendUserStatusUpdate(USER_STATUS_SPEED, USER_STATUS_CURE);
+			if (byBuffType == BUFF_TYPE_STUNNING)
+				TO_USER(pTarget)->SendUserStatusUpdate(USER_STATUS_BLIND, USER_STATUS_CURE);
 		}
 
 		TO_USER(pTarget)->SetUserAbility();
@@ -996,6 +1015,9 @@ bool CMagicProcess::IsBuff(_MAGIC_TYPE4 * pType)
 	case BUFF_TYPE_DAGGER_BOW_DEFENSE:	// Eskrima
 		return false;
 
+	case BUFF_TYPE_STUNNING:	//Stunned
+		return false;
+
 	case BUFF_TYPE_LOYALTY_AMOUNT:		// Santa's Present (gives an extra +2NP per kill).
 		return true;
 
@@ -1022,9 +1044,6 @@ bool CMagicProcess::IsBuff(_MAGIC_TYPE4 * pType)
 		return true;
 
 	// TO-DO: Identify and name these.
-	case 47: // appears to disable magic attacks, used by lots of skills but only one vaguely mentions that in its description.
-		return false;
-
 	case 48: // DC/War/Exp Flash - grants additional NP/XP
 		return true;
 

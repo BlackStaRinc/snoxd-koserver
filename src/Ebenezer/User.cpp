@@ -3533,7 +3533,6 @@ void CUser::ResetGMVisibility()
 
 void CUser::BlinkStart()
 {
-#if !defined(DISABLE_PLAYER_BLINKING)
 	// Don't blink in zones where we can attack the other nation (note: this includes the arena!)
 	if (GetMap()->canAttackOtherNation())
 		return;
@@ -3546,7 +3545,6 @@ void CUser::BlinkStart()
 	m_bInvisibilityType = INVIS_NONE; // but players should. 
 
 	StateChangeServerDirect(3, ABNORMAL_BLINKING);
-#endif
 }
 
 void CUser::BlinkTimeCheck()

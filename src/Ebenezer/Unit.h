@@ -115,8 +115,7 @@ public:
 	INLINE bool canInstantCast() { return m_bInstantCast; }
 	INLINE bool canStealth()	{ return m_bCanStealth; }
 
-	virtual bool isBlinking() { return false; }
-
+	virtual bool isBlinking() { return m_bIsBlinking; }
 	virtual bool isDead() = 0;
 	virtual bool isAlive() { return !isDead(); }
 
@@ -201,6 +200,8 @@ public:
 	int16	m_sAttackSpeedAmount;
 	uint8   m_bSpeedAmount;
 
+	time_t	m_tBlinkExpiryTime;
+
 	// Item calculated elemental resistances.
 	uint16	m_sFireR, m_sColdR, m_sLightningR, 
 			m_sMagicR, m_sDiseaseR, m_sPoisonR;
@@ -273,6 +274,7 @@ public:
 	FastMutex	m_buffLock;
 	uint8		m_buffCount; // counter for buffs (not debuffs). Used for identifying when the user is buffed.
 
+	bool	m_bIsBlinking;
 	bool	m_bIsBlinded;
 	bool	m_bCanUseSkills; // blinding prevents you from using skills or attacks, skills like "Full Skill Gear" prevent use of skills only.
 	bool	m_bCanUsePotions;
