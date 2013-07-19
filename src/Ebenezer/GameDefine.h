@@ -622,6 +622,7 @@ enum BuffType
 	BUFF_TYPE_ATTACK_RANGE_ARMOR	= 43,  // Inevitable Murderous
 	BUFF_TYPE_MIRROR_DAMAGE_PARTY	= 44,  // Minak's Thorn
 	BUFF_TYPE_DAGGER_BOW_DEFENSE	= 45,  // Eskrima
+	BUFF_TYPE_STUNNING		= 47,  // Lighting Skills, Shock Stun
 	BUFF_TYPE_LOYALTY_AMOUNT		= 55,  // Santa's Present
 	BUFF_TYPE_NO_RECALL				= 150, // "Cannot use against the ones to be summoned"
 	BUFF_TYPE_REDUCE_TARGET			= 151, // "Reduction" (reduces target's stats, but enlarges their character to make them easier to attack)
